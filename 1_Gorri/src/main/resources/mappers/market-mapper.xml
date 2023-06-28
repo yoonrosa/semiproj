@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0/EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="marketMapper">
+
+	<!-- 단순히 페이지네이션을 위한 count입니다. -->
+	<select id="getListCount" resultType="_int">
+		select count(*)
+		from product
+	</select>
+	
+	<select id="marketMainPage" resultMap="ProductBoardResultSet">
+		SELECT *
+		FROM (select *
+			  from product
+			  WHERE pro_name LIKE '%${all}%' or SELLER_ID like '%${all}%')
+		WHERE pro_name LIKE '%${search}%' and category like '%${category}%' and SELLER_ID like '%${seller}%' 
+		order by product_no desc
+	</select>
+	
+	<!-- 마켓부분 첨부파일 가져오기 -->
+	<select id="selectAttmList" resultMap="attmResultSet">
+		select * from attachment
+		where board_type = '마켓'
+	</select>
+
+	<!-- 게시글 삭제 -->
+	<delete id="deleteProduct">
+		delete from product
+		where product_no = ${productNo}
+	</delete>
+ 	
+ 	<delete id="deleteProductAttm">
+ 		delete from attachment
+ 		where board_no = #{productNo} and board_type = '마켓'
+ 	</delete>
+ 
+	<!-- 게시글 등록 -->
+	<insert id="insertProduct">
+		insert into product
+		values(seq_product.nextval, #{productName}, #{productContent}, #{productPrice}, sysdate, sysdate, #{productCategory}, #{productSellerId})
+	</insert>
+	
+	<!-- 첨부파일 등록 -->
+	<insert id="insertProductAttm">
+		insert all 
+		<foreach collection="list" item="item">
+			into attachment values(
+			new_aid, #{item.savePath}, #{item.originalName},#{item.renameName},#{item.boardType},seq_product.currval,#{item.attmLevel},#{item.usersId})
+		</foreach>
+		select * from dual
+	</insert>
+	
+	<!-- 상품 상세 정보 수정 -->
+	<update id="updateProduct">
+		update product set
+		pro_name = #{productName}, pro_content = #{productContent}, 
+		category = #{productCategory}, price = #{productPrice}, modify_date = sysdate 
+		where product_no = #{productNo}
+	</update>
+	
+	
+
+	<!-- 상품의 상세 정보를 위한 매핑입니다. -->
+	<select id="getProductInfo" resultMap="ProductBoardResultSet">
+		select *
+		from product
+		where PRODUCT_NO = #{productId}
+	</select>
+
+	
+	<!-- 상품의 판매자 객체를 위한 매핑입니다. -->
+	<select id="getSellerInfo" resultMap="memberResultSet">
+		select *
+		from member
+		where USERS_ID = #{seller}
+	</select>
+
+	<!-- 상품의 모든 문의를 가져오는 메소드 -->
+	<select id="ProductAllInquire" resultMap="inquireResultSet">
+		select *
+		from inquire
+		where product_no = #{productId}
+	</select>
+
+	<!-- 상품의 모든 후기를 가져오는 메소드 -->
+	<select id="ProductAllReview" resultMap="reviewResultSet" >
+		select *
+		from review
+		where product_no = #{productId}
+	</select>
+	
+	<select id="ProductOneReview" resultMap="reviewResultSet">
+		select *
+		from review
+		where product_no = #{productId} and review_no = #{reviewNo}
+	</select>
+	
+	<select id="ProductOneInquire" resultMap="inquireResultSet">
+		select *
+		from inquire
+		where PRODUCT_NO = #{productId} and INQUIRE_NO = #{inquireNo}
+	</select>
+	
+	<select id="ProductOneInquireReply" resultMap="inquireReplyResultSet">
+		select *
+		from inquire_reply
+		where inquire_no = #{inquireNo} and product_no = #{productId}
+	</select>
+	
+	<select id="UserAllProduct" resultMap="ProductBoardResultSet">
+		select *
+		from product
+		where SELLER_ID = #{id}
+		order by product_no desc
+	</select>
+	
+	<insert id="addReply">
+		insert into inquire_reply
+		values(#{inquireNo},#{productNo},SEQ_INQUIRE_REPLY.NEXTVAL,#{comment},#{id}, sysdate, sysdate)
+	</insert>
+	
+	<!-- 구매 -->
+	<insert id="purchase">
+		insert into pay
+		values(#{originalId}, #{paymentNo}, #{productNo}, #{buyerId}, #{buyerName}, #{buyerPhone}, 
+				#{address}, #{amount}, #{paymentAmount}, #{require}, sysdate)
+	</insert>
+	
+	<select id="selectPay" resultMap="payResultSet">
+		select *
+		from pay
+		where product_no=#{productId}
+	</select>
+	
+	<insert id="insertReview">
+		insert into review
+		values(SEQ_REVIEW.NEXTVAL, #{reviewContent}, default, #{buyerId}, #{productNo})
+	</insert>
+	
+	
+
+		<!--resultMaps -->
+	<!-- Product. -->
+	<resultMap type="Product" id="ProductBoardResultSet">
+		<id column="PRODUCT_NO" property="productNo"/>
+		<result column="PRO_NAME" property="productName"/>
+		<result column="PRO_CONTENT" property="productContent"/>
+		<result column="PRICE" property="productPrice"/>
+		<result column="POSTDATE" property="productPostDate"/>
+		<result column="MODIFY_DATE" property="productModifyDate"/>
+		<result column="CATEGORY" property="productCategory"/>
+		<result column="SELLER_ID" property="productSellerId"/>
+	</resultMap>
+
+	<!-- Member -->
+	<resultMap type="Member" id="memberResultSet">
+		<id column="USERS_ID" property="userId"/>
+		<result column="PWD" property="userPwd"/>
+		<result column="PWD_Q" property="pwdQ"/>
+		<result column="PWD_HINT" property="pwdHint"/>
+		<result column="NAME" property="userName"/>
+		<result column="ADDRESS" property="address"/>
+		<result column="WALLET" property="wallet"/>
+		<result column="ENROLLDATE" property="enrollDate"/>
+		<result column="PHONE" property="phone"/>
+		<result column="NICKNAME" property="nickName"/>
+		<result column="MYINTRO" property="myIntro"/>
+		<result column="STATUS" property="status"/>
+		<result column="IS_ADMIN" property="isAdmin"/>		
+	</resultMap>
+	
+	<!-- Inquire -->
+	<resultMap type="Inquire" id="inquireResultSet">
+		<id column="INQUIRE_NO" property="inquireNo"/>
+		<result column="INQUIRE_CONTENT" property="inquireContent"/>
+		<result column="POSTDATE" property="inquirePostDate"/>
+		<result column="BUYER_ID" property="buyerId"/>
+		<result column="PRODUCT_NO" property="productNo"/>
+	</resultMap>
+
+	<!-- Delivery -->
+	<resultMap type="Delivery" id="deliveryResultSet">
+		<id column="DELIVERY_NO" property="deliveryNo"/>
+		<result column="DELDATE" property="deliveryDate"/>
+		<result column="DEL_STATUS" property="deliveryStatus"/>
+		<result column="PAY_NO" property="paymentNo"/>
+	</resultMap>
+	
+	<!-- Review -->
+	<resultMap type="Review" id="reviewResultSet">
+		<id column="REVIEW_NO" property="reviewNo"/>
+		<result column="REVIEW_CONTENT" property="reviewContent"/>
+		<result column="POSTDATE" property="reviewPostDate"/>
+		<result column="BUYER_ID" property="buyerId"/>
+		<result column="PRODUCT_NO" property="productNo"/>
+	</resultMap>
+	
+	<!-- Pay -->
+	<resultMap type="Pay" id="payResultSet">
+		<id column="ORIGINAL_ID" property="originalId"/>
+		<result column="PAY_NO" property="paymentNo"/>
+		<result column="PRODUCT_NO" property="productNo"/>
+		<result column="BUYER_ID" property="buyerId"/>
+		<result column="BUYER_NAME" property="buyerName"/>
+		<result column="BUYER_PHONE" property="buyerPhone"/>
+		<result column="ADDRESS" property="address"/>
+		<result column="AMOUNT" property="amount"/>
+		<result column="PAYMENTAMOUNT" property="paymentAmount"/>
+		<result column="REQUIRE" property="require"/>
+		<result column="PAYDATE" property="payDate"/>
+	</resultMap>
+	
+	<!-- Attachment -->
+	<resultMap type="Attachment" id="attmResultSet">
+		<id column="ATTM_ID" property="attmId"/>
+		<result column="SAVE_PATH" property="savePath"/>
+		<result column="ORIGINALNAME" property="originalName"/>
+		<result column="RENAMENAME" property="renameName"/>
+		<result column="BOARD_TYPE" property="boardType"/>
+		<result column="BOARD_NO" property="boardNo"/>
+		<result column="ATTMLEVEL" property="attmLevel"/>
+		<result column="USERS_ID" property="usersId"/>	
+	</resultMap>
+	
+	<!-- InquireReply -->
+	<resultMap type="InquireReply" id="inquireReplyResultSet">
+		<result column="INQUIRE_NO" property="inquireNo"/>
+		<result column="PRODUCT_NO" property="productNo"/>
+		<result column="REPLY_NO" property="replyNo"/>
+		<result column="REPLY_CONTENT" property="replyContent"/>
+		<result column="REPLY_WRITER" property="replyWriter"/>
+		<result column="REPLY_CREATE_DATE" property="replyCreateDate"/>
+		<result column="REPLY_MODIFY_DATE" property="replyModifyDate"/>
+	</resultMap>
+	
+	<insert id="insertInquire">
+      INSERT INTO INQUIRE 
+      VALUES (SEQ_INQUIRE.NEXTVAL, #{productNo}, #{inquireContent}, sysdate, #{buyerId})
+    </insert>
+   
+    <select id="selectInquire" resultMap="inquireResultSet">
+      select *
+      from inquire 
+      where product_no = #{productNo}
+      order by inquire_no desc
+    </select>
+	
+</mapper>

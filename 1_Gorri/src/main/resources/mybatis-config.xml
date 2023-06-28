@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd" >
+<configuration>
+	<settings>
+   		<setting name="jdbcTypeForNull" value="NULL" />
+   </settings>
+   
+   <typeAliases>
+		<typeAlias type="com.kh.gorri.board.model.vo.Board" alias="Board"/>
+		<typeAlias type="com.kh.gorri.board.model.vo.Attachment" alias="Attachment"/>
+		<typeAlias type="com.kh.gorri.board.model.vo.Reply" alias="Reply"/>
+		
+		<typeAlias type="com.kh.gorri.member.model.vo.Member" alias="Member"/>
+		
+<!-- 		<typeAlias type="com.kh.gorri.common.model.vo.Attachment" alias="Attachment1"/> -->
+		
+		<typeAlias type="com.kh.gorri.market.model.vo.Delivery" alias="Delivery"/>
+		<typeAlias type="com.kh.gorri.market.model.vo.Inquire" alias="Inquire"/>
+		<typeAlias type="com.kh.gorri.market.model.vo.InquireReply" alias="InquireReply"/>
+		<typeAlias type="com.kh.gorri.market.model.vo.Pay" alias="Pay"/>
+		<typeAlias type="com.kh.gorri.market.model.vo.Product" alias="Product"/>
+		<typeAlias type="com.kh.gorri.market.model.vo.Review" alias="Review"/>
+	</typeAliases>
+	
+	<mappers>
+		<mapper resource="mappers/member-mapper.xml"/>
+		<mapper resource="mappers/group-mapper.xml"/>
+		<mapper resource="mappers/mini-mapper.xml"/>
+		<mapper resource="mappers/hobby-mapper.xml"/>
+		<mapper resource="mappers/board-mapper.xml"/>
+		<mapper resource="mappers/home-mapper.xml"/>
+		<mapper resource="mappers/market-mapper.xml"/>
+		<mapper resource="mappers/admin-mapper.xml"/>
+	</mappers>
+</configuration>

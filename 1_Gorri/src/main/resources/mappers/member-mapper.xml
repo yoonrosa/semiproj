@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="memberMapper">
+	
+	<select id="login" resultMap="memberResultSet">
+		select *
+		from USERS
+		where users_id=#{userId} and status='Y'  
+	</select>
+	<resultMap type="com.kh.gorri.member.model.vo.Member" id="memberResultSet">
+		<id column="ID" property="id"/>
+		<result column="USERS_ID" property="userId"/>
+		<result column="PWD" property="userPwd"/>
+		<result column="PWD_Q" property="pwdQ"/>
+		<result column="PWD_HINT" property="pwdHint"/>
+		<result column="NAME" property="userName"/>
+		<result column="ADDRESS" property="address"/>
+		<result column="WALLET" property="wallet"/>
+		<result column="ENROLLDATE" property="enrollDate"/>
+		<result column="PHONE" property="phone"/>
+		<result column="NICKNAME" property="nickName"/>
+		<result column="MYINTRO" property="myIntro"/>
+		<result column="STATUS" property="status"/>
+		<result column="IS_ADMIN" property="isAdmin"/>		
+	</resultMap>
+	
+	<select id="findPwd" resultType="_int">
+		select count(*)
+		from users
+		where users_id=#{userId} and pwd_q=#{pwdQ} and pwd_hint=#{pwdHint}		
+	</select>
+	
+	<update id="changePwd">
+		update users set pwd=#{userPwd} where users_id=#{userId}
+	</update>
+	
+	<!-- 보서)회원가입 구현 : 2023-05-12 -->
+	<insert id="insertMember">
+		INSERT INTO USERS VALUES(#{userId}, #{userPwd}, #{pwdQ}, #{pwdHint}, #{userName}, #{address}, #{wallet}, SYSDATE, #{phone}, #{nickName}, #{myIntro}, default, default)
+	</insert>
+	
+	<!-- 보서) 아이디 중복 구현 : 2023-05.12 -->
+	<select id="checkId" resultType="_int">
+		select count(*)
+		from users
+		where users_id=#{userId}
+	</select>
+	
+	<!-- 보서) 닉네임 중복 구현 : 2023-05.12 -->
+	<select id="checkNick" resultType="_int">
+		select count(*)
+		from users
+		where nickname=#{nickName} and status='Y'
+	</select>
+	
+	
+	
+	<!-- 관리자 페이지 회뭔수 -->
+	<select id = "getListCount" resultType="_int">
+		 select count(*)
+		 from users
+	</select>
+	
+	<!-- 관리자 페이지 회원 목록 -->
+	<select id="selectMemberList" resultMap="memberResultSet">
+		select *
+		from users
+		order by enrolldate desc
+	</select>
+	
+	<select id="findId" resultMap ="memberResultSet">
+      select *
+      from users
+      where name= #{userName} and phone=#{phone}
+   </select>
+	
+	<update id="updateMember">
+		update users set pwd_q = #{pwdQ}, pwd_hint = #{pwdHint}, nickname=#{nickName}, phone=#{phone} where users_id=#{userId}
+	</update>
+	
+	<update id="quitGorri">
+		update users set status ='N' where users_id = #{userId}
+	</update>
+	
+	<select id="loginAttm" resultMap="loginUserAttm">
+      select *
+      from attachment
+      where attmId = (select max(attmId) from attachment where board_type='프사' and users_id = #{userId})
+   	</select>
+   
+   <resultMap type="com.kh.gorri.board.model.vo.Attachment" id="loginUserAttm">
+      <id column="ATTMID" property="attmId"/>
+      <id column="SAVE_PATH" property="savePath"/>
+      <id column="ORIGINALNAME" property="originalName"/>
+      <id column="RENAMENAME" property="renameName"/>
+      <id column="BOARD_TYPE" property="boardType"/>
+      <id column="BOARD_NO" property="boardNo"/>
+      <id column="ATTMLEVEL" property="attmLevel"/>
+      <id column="USERS_ID" property="usersId"/>
+   </resultMap>
+   
+   <select id="getUserInfo" resultMap="memberResultSet">
+   	select *
+   	from users
+   	where users_id=#{userId}
+   </select>
+   <select id="getUserPic" resultMap="loginUserAttm">
+    select *
+    from attachment
+    where users_id= #{userId} and board_type= '프사'
+   </select>
+</mapper>

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="boardMapper">
+	<select id="selectBoardList" resultMap="boardResultSet">
+		select *
+		from board
+		where is_public='Y'
+		order by board_no desc
+	</select>
+	
+	<resultMap type="Board" id="boardResultSet">
+		<id column="BOARD_NO" property="boardNo"/>
+		<result column="BOARD_TITLE" property="boardTitle"/>
+		<result column="BOARD_CONTENT" property="boardContent"/>
+		<result column="IS_PUBLIC" property="isPublic"/>
+		<result column="STATUS" property="status"/>
+		<result column="POSTDATE" property="postdate"/>
+		<result column="MODIFYDATE" property="modifydate"/>
+		<result column="USERS_ID" property="usersId"/>
+		<result column="CATEGORY" property="category"/>
+	</resultMap>
+	
+	<select id="selectAttmBoardList" resultMap="AttmResultSet">
+		select *
+		from attachment
+		where board_type='취미' and attmlevel=0
+		order by attmid desc
+	</select>
+	
+	<resultMap type="Attachment" id="AttmResultSet">
+		<id column="ATTMID" property="attmId"/>
+		<result column="SAVE_PATH" property="savePath"/>
+		<result column="ORIGINALNAME" property="originalName"/>
+		<result column="RENAMENAME" property="renameName"/>
+		<result column="BOARD_TYPE" property="boardType"/>
+		<result column="BOARD_NO" property="boardNo"/>
+		<result column="ATTMLEVEL" property="attmLevel"/>
+		<result column="USERS_ID" property="usersId"/>
+	</resultMap>
+	
+	<insert id="insertBoard">
+		insert into board values(seq_board.nextval, #{boardTitle}, #{boardContent}, #{isPublic}, default, default, sysdate, #{usersId}, #{category})
+	</insert>
+	
+	<insert id="insertAttm">
+		insert all
+		<foreach collection="list" item="item">
+			into attachment values(new_aid, #{item.savePath}, #{item.originalName}, #{item.renameName}, '취미', 
+		<if test="item.boardNo == 0">
+			seq_board.currval,
+		</if>
+		<if test="item.boardNo != 0">
+			#{item.boardNo},
+		</if>
+			#{item.attmLevel}, #{item.usersId})
+		</foreach>
+		select * from dual
+	</insert>
+	
+	<select id="selectBoard" resultMap="boardResultSet">
+		select *
+		from board
+			 join users using(users_id)
+		where board_no=${bNo}	
+	</select>
+	
+	<select id="selectAttmBoard" resultMap="AttmResultSet">
+		select *
+		from attachment
+		where board_no=${bNo} and board_type='취미'
+		order by attmlevel desc
+	</select>
+	
+	<delete id="deleteAttm">
+		delete from attachment
+		where RENAMENAME in
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<update id="updateAttmLevel">
+		update attachment
+		set attmlevel=0
+		where ATTMID=(select min(ATTMID)
+						from attachment
+						where board_no=#{boardNo})
+	</update>
+	
+	<update id="updateBoard">
+		update board
+		set board_title=#{boardTitle}, board_content=#{boardContent}, is_public=#{isPublic}, modifydate=sysdate, category=#{category}
+		where board_no=#{boardNo}
+	</update>
+	
+	<delete id="deleteBoard">
+		delete from board
+		where board_no=#{boardNo}
+	</delete>
+	
+	<delete id="deleteBoardAttm">
+		delete from attachment
+		where board_no=#{boardNo} and board_type='취미'
+	</delete>
+	
+	<select id="selectReply" resultMap="replyResultSet">
+		select *
+		from board_reply
+			 join users on(reply_writer = users_id)
+		where board_no=#{boardNo}
+		order by reply_no desc
+	</select>
+	
+	<resultMap type="Reply" id="replyResultSet">
+		<id column="REPLY_NO" property="replyNo"/>
+		<result column="REPLY_CONTENT" property="replyContent"/>
+		<result column="REPLY_WRITER" property="replyWriter"/>
+		<result column="REPLY_CREATE_DATE" property="replyCreateDate"/>
+		<result column="REPLY_MODIFY_DATE" property="replyModifyDate"/>
+		<result column="BOARD_NO" property="boardNo"/>
+	</resultMap>
+	
+	<insert id="insertReply">
+		insert into board_reply 
+		values(seq_board_reply.nextval, #{replyContent}, #{replyWriter}, sysdate, sysdate, #{boardNo})
+	</insert>
+	
+	<select id="selectUserBoardList" resultMap="boardResultSet">
+		select *
+		from board
+		where users_id=#{userId}
+		order by board_no desc
+	</select>
+	
+	<select id="selectUserAttmList" resultMap="AttmResultSet">
+		select *
+		from attachment
+		where users_id=#{userId}
+	</select>
+	
+	<delete id="deleteReply">
+		delete from board_reply
+		where reply_no=#{replyNo} and reply_writer=#{replyWriter}
+	</delete>
+	
+	<update id="updateReply">
+		update board_reply
+		set reply_content=#{replyContent}
+		where reply_no=#{replyNo} and reply_writer=#{replyWriter}
+	</update>
+	
+	<select id="getListCount" resultType="_int">
+		select count(*)
+		from board
+	</select>
+	
+	<select id="boardListCount" resultType="_int">
+		select count(*)
+		from board
+		where users_id=#{userId}
+	
+	</select>
+</mapper>

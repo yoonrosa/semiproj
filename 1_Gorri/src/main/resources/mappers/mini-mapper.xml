@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="miniMapper">
+
+	<select id="groupList" resultType="map">
+		select*
+		from membership
+			 join member on(member.membership_no = membership.membership_no)
+			 join attachment on(membership.membership_no = attachment.board_no)
+		where member.users_id = #{userId} and board_type= '모대'
+		order by attmid desc
+	</select>
+
+	<select id="getProductList" resultType="map">
+		select *
+		from pay
+     		 join product using(product_no)
+             join users on(buyer_id = users_id)
+		where buyer_id = #{userId}
+		order by pay_no desc
+	</select>
+
+	<update id="updateIntro">
+		update users
+		set myIntro = #{myIntro}
+		where users_id = #{userId}
+	</update>
+
+	<insert id="insertAttm">
+		insert into attachment(attmid, SAVE_PATH, ORIGINALNAME, RENAMENAME, board_type, USERS_ID)
+		values(SEQ_ATTACHMENT.nextval, #{savePath} , #{originalName}, #{renameName}, #{boardType}, #{usersId})
+	</insert>
+	
+	<update id="deleteMoim">
+      update member
+      set status = 'N'
+      where membership_no = ${mId} and users_id = #{userId}
+   	</update>
+   	
+   	<select id="getProfileImage" resultMap="AttmResultSet">
+      select *
+      from attachment
+      where board_type = '프사' and users_id = #{id}
+	</select>
+	
+	<resultMap type="Attachment" id="AttmResultSet">
+      <id column="ATTMID" property="attmId"/>
+      <result column="SAVE_PATH" property="savePath"/>
+      <result column="ORIGINALNAME" property="originalName"/>
+      <result column="RENAMENAME" property="renameName"/>
+      <result column="BOARD_TYPE" property="boardType"/>
+      <result column="BOARD_NO" property="boardNo"/>
+      <result column="ATTMLEVEL" property="attmLevel"/>
+      <result column="USERS_ID" property="usersId"/>
+   </resultMap>
+	
+	
+	<update id="updateAttm">
+      update attachment
+      set attmid = SEQ_ATTACHMENT.nextval,
+         save_path = #{savePath},
+         originalname = #{originalName},
+         renamename = #{renameName}
+      where board_type = '프사' and users_id = #{usersId}
+   </update>
+   
+
+   	
+   	
+   	
+</mapper>

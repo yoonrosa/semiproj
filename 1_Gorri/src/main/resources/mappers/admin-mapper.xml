@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="adminMapper">
+	
+	<select id="adminContent" resultMap="adminContentResultSet">
+		select *
+		from board
+			 join users using(users_id)
+		order by board_no
+	</select>
+	
+	<resultMap type="Board" id="adminContentResultSet">
+		<id column="BOARD_NO" property="boardNo"/>
+		<result column="BOARD_TITLE" property="boardTitle"/>
+		<result column="BOARD_CONTENT" property="boardContent"/>
+		<result column="IS_PUBLIC" property="isPublic"/>
+		<result column="STATUS" property="status"/>
+		<result column="POSTDATE" property="postdate"/>
+		<result column="MODIFYDATE" property="modifydate"/>
+		<result column="USERS_ID" property="usersId"/>
+		<result column="CATEGORY" property="category"/>
+		<result column="NICKNAME" property="nickName"/>
+	</resultMap>
+	
+	<delete id="adminDeleteBoard">
+		delete from board
+		where board_no=#{boardNo}
+	</delete>
+	
+	<delete id="adminDeleteAttm">
+		delete from attachment
+		where board_no=#{boardNo}
+	</delete>
+	
+	<resultMap type="com.kh.gorri.market.model.vo.Pay" id="payResultSet">
+		<id column="ORIGINAL_ID" property="originalId"/>
+		<result column="PAY_NO" property="paymentNo"/>
+		<result column="PRODUCT_NO" property="productNo"/>
+		<result column="BUYER_ID" property="buyerId"/>
+		<result column="BUYER_NAME" property="buyerName"/>
+		<result column="BUYER_PHONE" property="buyerPhone"/>
+		<result column="ADDRESS" property="address"/>
+		<result column="AMOUNT" property="amount"/>
+		<result column="PAYMENTAMOUNT" property="paymentAmount"/>
+		<result column="REQUIRE" property="require"/>
+		<result column="PAYDATE" property="payDate"/>
+	</resultMap>
+	
+	<select id="selectProductList" resultMap="ProductBoardResultSet">
+		select *
+		from product
+		order by product_no desc
+	</select>
+	
+	<resultMap type="Product" id="ProductBoardResultSet">
+		<id column="PRODUCT_NO" property="productNo"/>
+		<result column="PRO_NAME" property="productName"/>
+		<result column="PRO_CONTENT" property="productContent"/>
+		<result column="PRICE" property="productPrice"/>
+		<result column="POSTDATE" property="productPostDate"/>
+		<result column="MODIFY_DATE" property="productModifyDate"/>
+		<result column="CATEGORY" property="productCategory"/>
+		<result column="SELLER_ID" property="productSellerId"/>
+	</resultMap>
+	
+	
+	<select id="selectPay" resultMap="payResultSet">
+		<![CDATA[
+		SELECT *
+		FROM (SELECT *
+			FROM pay
+			ORDER BY paydate DESc
+			)
+		WHERE ROWNUM <= 5
+		]]>
+	</select>
+	
+	<delete id="deleteProduct">
+	 delete from product where product_no = #{productNo}
+	</delete>
+</mapper>
+
+

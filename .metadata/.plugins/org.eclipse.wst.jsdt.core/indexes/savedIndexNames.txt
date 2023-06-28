@@ -1,0 +1,2 @@
+INDEX VERSION 1.4+C:\Users\user1\Desktop\Gorrigit\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
+1675833502.index

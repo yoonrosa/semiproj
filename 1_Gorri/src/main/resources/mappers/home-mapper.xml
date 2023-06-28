@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="homeMapper">
+	<select id="hobbyBoardList" resultMap="searchHobbyResultSet">
+	select *
+	from board
+<!-- 	join attachment using(board_no) -->
+	where is_public = 'Y' and status='Y'
+	order by board_no desc
+	</select>
+	
+	<resultMap type="com.kh.gorri.board.model.vo.Board" id="searchHobbyResultSet">
+		<id column="BOARD_NO" property="boardNo"/>
+		<result column="BOARD_TITLE" property="boardTitle"/>
+		<result column="BOARD_CONTENT" property="boardContent"/>
+		<result column="IS_PUBLIC" property="isPublic"/>
+		<result column="STATUS" property="status"/>
+		<result column="POSTDATE" property="postdate"/>
+		<result column="MODIFYDATE" property="modifydate"/>
+		<result column="USERS_ID" property="usersId"/>
+		<result column="CATEGORY" property="category"/>
+		<result column="SAVE_PATH" property="savePath"/>
+		<result column="ORIGINALNAME" property="originalName"/>
+		<result column="RENAMENAME" property="renameName"/>
+		<result column="BOARD_TYPE" property="boardType"/>
+		<result column="ATTMLEVEL" property="attmLevel"/>
+	</resultMap>
+	
+	<select id="selectAttmBoard" resultMap="attmResultSet">
+	select *
+	from attachment
+	where board_type='취미' and attmlevel='0'
+	</select>
+	
+	<resultMap type="com.kh.gorri.group.model.vo.Attachment" id="attmResultSet">
+		<id column="ATTMID" property="attmId"/>		
+		<result column="SAVE_PATH" property="savePath"/>
+		<result column="ORIGINALNAME" property="originalName"/>
+		<result column="RENAMENAME" property="renameName"/>
+		<result column="BOARD_TYPE" property="boardType"/>
+		<result column="BOARD_NO" property="boardNo"/>
+		<result column="ATTMLEVEL" property="attmLevel"/>
+		<result column="USERS_ID" property="userId"/>		
+	</resultMap>
+</mapper>

@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="groupMapper">
+	<insert id="insertAttm">
+		insert into Attachment 
+		values(seq_attachment.nextval, #{savePath}, #{originalName}, #{renameName}, '모대', seq_membership.currval, 0, null)
+	</insert>
+	<insert id="insertGroup">
+		insert into membership 
+		values(seq_membership.nextval, #{membershipName}, #{ membershipContent }, 1, default, #{ hostPhone }, #{ category })
+	</insert>
+	
+	<insert id="insertGroupMember">
+		insert into member values (#{memberId}, seq_membership.currval, #{grade}, sysdate, default )
+	</insert>
+	
+	<select id="getListCount" resultType="_int">
+		select count(*)
+		from membership
+	</select>
+	
+	<select id="selectGroupList" resultMap="groupResultSet">
+		select *
+		from membership
+		order by membership_no desc
+	</select>
+	
+	<resultMap type="com.kh.gorri.group.model.vo.Group" id="groupResultSet">
+		<id column="MEMBERSHIP_NO" property="membershipNo"/>		
+		<result column="MEMBERSHIP_NAME" property="membershipName"/>
+		<result column="MEMBERSHIP_CONTENT" property="membershipContent"/>
+		<result column="CAPACITY" property="capacity"/>
+		<result column="MEMBERSHIP_DELETE" property="membershipStatus"/>
+		<result column="HOST_PHONE" property="hostPhone"/>
+		<result column="CATEGORY" property="category"/>
+		<result column="USERS_ID" property="hostId"/>		
+	</resultMap>
+	
+	
+	<select id="selectAttmGroupList" resultMap="attmResultSet">
+		select *
+		from attachment
+		where board_type= '모대'
+		order by attmid desc
+	</select>
+	
+	<resultMap type="com.kh.gorri.group.model.vo.Attachment" id="attmResultSet">
+		<id column="ATTMID" property="attmId"/>		
+		<result column="SAVE_PATH" property="savePath"/>
+		<result column="ORIGINALNAME" property="originalName"/>
+		<result column="RENAMENAME" property="renameName"/>
+		<result column="BOARD_TYPE" property="boardType"/>
+		<result column="BOARD_NO" property="boardNo"/>
+		<result column="ATTMLEVEL" property="attmLevel"/>
+		<result column="USERS_ID" property="userId"/>		
+	</resultMap>
+	
+	
+	<select id="searchGroupByHost" resultMap="groupResultSet">
+		select *
+		from membership
+			 join member using(membership_no)
+		where users_id like '%${searchWord}%' and grade = '모임장'
+		order by membership_no desc
+	</select>
+	
+	<select id="searchGroupByName" resultMap="groupResultSet">
+		select *
+		from membership		
+		where membership_name like '%${searchWord}%'
+		order by membership_no desc	
+	</select>
+	
+	<select id="searchGroup" resultMap="groupResultSet">
+		SELECT *
+		FROM membership
+		WHERE membership_no = (SELECT DISTINCT membership_no
+                       			 FROM membership
+                       			 JOIN member USING (membership_no)
+                        		WHERE membership_name LIKE '%${searchWord}%'
+                       			 OR (users_id LIKE '%${searchWord}%' AND grade = '모임장'))
+	</select>
+	
+	
+  <!-- 2023.05.14 보서 / 모임별 화면 -->
+  <select id="selectGroupView" resultMap="selectGroupViewer">
+     select 
+        mberShip.MEMBERSHIP_NO
+        , mberShip.MEMBERSHIP_NAME
+        , mberShip.MEMBERSHIP_CONTENT
+        , mberShip.CAPACITY
+        , mberShip.MEMBERSHIP_DELETE
+        , mberShip.HOST_PHONE
+        , mberShip.CATEGORY
+        , member.USERS_ID as hostId
+   from 
+      membership mberShip 
+   left join 
+      member 
+         on mberShip.membership_no = member.membership_no
+   where 
+      mberShip.membership_no = #{membershipNo}
+  </select>  
+  
+  <resultMap type="com.kh.gorri.group.model.vo.Group" id="selectGroupViewer">
+   <id property="membershipNo" column="MEMBERSHIP_NO"/>
+   <result property="membershipName" column="MEMBERSHIP_NAME"/>
+   <result property="membershipContent" column="MEMBERSHIP_CONTENT"/>
+   <result property="capacity" column="CAPACITY"/>
+   <result property="membershipStatus" column="MEMBERSHIP_DELETE"/>
+   <result property="hostPhone" column="HOST_PHONE"/>
+   <result property="category" column="CATEGORY"/>
+   <result property="hostId" column="HOSTID"/>
+  </resultMap>
+  
+  
+  <!-- 글 조회  -->
+	<select id="selectListCount" resultType="_int">
+		select count(*)
+		from membership_board
+		where membership_no = #{i}
+	</select>
+
+	<select id="selectBoardList" resultMap="boardResultSet">
+		select * from membership_board where membership_no = #{ membershipNo} and status = 'Y'
+	</select>
+
+	<resultMap type="com.kh.gorri.group.model.vo.GroupBoard"
+		id="boardResultSet">
+		<result property="boardNo" column="BOARD_NO" />
+		<result property="title" column="TITLE" />
+		<result property="content" column="CONTENT" />
+		<result property="postDate" column="POSTDATE" />
+		<result property="modifyDate" column="MODIFYDATE" />
+		<result property="usersId" column="USERS_ID" />
+		<result property="groupNo" column="MEMBERSHIP_NO" />
+		<result property="status" column="STATUS" />
+	</resultMap>
+
+	<!-- 상세 글 조회 -->
+	<select id="selectDetailBoard" resultMap="boardResultSet">
+		select *
+		from membership_board
+		where status = 'Y' and board_no = #{boardNo}
+	</select>
+	
+	<select id="selectGroupListWithHost" resultMap="groupResultSet">
+		select *
+		from membership join member using(membership_no)
+		where grade='모임장'
+		order by membership_no desc
+	</select>
+	
+	
+	<select id="getCategoryListCount" resultType="_int">
+		select count(*)
+		from membership
+		where category=#{category}
+	</select>
+	
+	<select id="selectCategoryGroupList" resultMap="groupResultSet">
+		select *
+		from membership
+		where category=#{category}
+		order by membership_no desc
+	</select>
+	
+	<select id="getMemberCount" resultType="_int">
+		select count(*)
+		from member
+		where membership_no = ${membershipNo} and status='Y'
+	</select>
+	
+	<select id="getGroupMemberList" resultMap="GroupMemberResultSet">
+		select *
+		from member
+		where membership_no=#{membershipNo} and grade='회원'
+	</select>
+	
+	<resultMap type="com.kh.gorri.group.model.vo.GroupMember" id="GroupMemberResultSet">
+		<result property="memberId" column="USERS_ID" />
+		<result property="grade" column="GRADE" />
+		<result property="hireDate" column="HIREDATE" />
+		<result property="membershipNo" column="MEMBERSHIP_NO" />
+		<result property="status" column="STATUS" />
+	</resultMap>
+	
+	<select id="getGroupPic" resultMap="attmResultSet">
+		select *
+		from attachment
+		where board_type='모대' and board_no=#{membershipNo}
+	</select>
+	<select id="getGroupInfo" resultMap="groupResultSet">
+		select *
+		from membership
+			 join member using(membership_no)
+		where membership_no = #{membershipNo} and grade='모임장'
+	</select>
+	
+	<update id="deleteMember">
+		update member set status='N' where membership_no=#{membershipNo} and users_id=#{memberId}
+	</update>
+	
+	<select id="getMainGroupList" resultMap="groupResultSet">
+		SELECT *
+		FROM membership
+		order by capacity desc
+	</select>
+	
+	
+	
+	<!-- 모임 상세 페이지 - 가입자 여부 체크 -->
+	<select id="checkStatus" resultType="_int">
+		select count(*)
+		from member
+		where users_id = #{login} and membership_no = #{membershipNo}
+	</select>
+	
+	<!-- 모임 상세 페이지 - 관리자 여부 체크 -->
+	<select id="checkAdmin" resultType="_int">
+		select count(*)
+		from member 
+		where users_id = #{login} and membership_no = #{membershipNo} and grade = '모임장'
+	</select>
+	
+	
+	<!-- 모임 게시글 등록 -->
+	<insert id="insertBoard">
+		insert into membership_board values
+		(SEQ_MEMBERSHIP_BOARD.NEXTVAL, #{title}, #{content}, sysdate, sysdate, #{usersId}, #{groupNo}, 'Y')
+	</insert>
+	
+	<!-- ROWNUM 으로 USERID가 등록한 최신 글 뽑기   -->
+	<select id="selectNewBoardNo" resultType="_int">
+		SELECT BOARD_NO
+		FROM (
+		  SELECT *
+		  FROM MEMBERSHIP_BOARD
+		  WHERE USERS_ID = #{id}
+		  ORDER BY BOARD_NO DESC
+		)
+		WHERE ROWNUM = 1
+	</select>
+	
+	<!-- 게시글 중 첨부파일 등록 -->
+	<insert id="insertGroupAttm">
+		insert into Attachment 
+		values(seq_attachment.nextval, #{savePath}, #{originalName}, #{renameName}, '모임', #{boardNo}, 2, #{userId})
+	</insert>
+	
+	<!-- 수빈 : 모임 가입 -->
+	<insert id="groupJoin">
+		insert into member values(#{memberId}, #{membershipNo}, '회원', sysdate, default)
+	</insert>
+	
+	<!-- 수빈 : 모임장인지 -->
+	<select id="checkGroupAdmin" resultType = "_int">
+		select count(*)
+		from member
+		where membership_no = #{membershipNo} and grade = '모임장' and users_Id = #{memberId}
+	</select>
+	
+	<!-- 수빈 : 검색창 리스트 카운트-->
+	<select id="getSearchListCount" resultType="_int">
+		SELECT COUNT(*)
+		FROM membership
+		JOIN member USING (membership_no)
+		<where>
+			<choose>
+				<!-- searchCate가 '모임장'인 경우 -->
+				<when test="searchCate == '모임장'">
+					users_id like '%${searchWord}%' and grade='모임장'
+				</when>
+				<!-- searchCate가 '모임이름'인 경우 -->
+				<when test="searchCate == '모임명'">
+					membership_Name like '%${searchWord}%'
+				</when>
+				<!-- searchCate가 '전체'인 경우 -->
+				<otherwise>
+					(users_id like '%${searchWord}%' and grade='모임장') OR
+					membership_Name like '%${searchWord}%'
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+	
+	<!-- 새 그룹 사진 -->
+	<insert id="newGroupPic">		
+		insert into Attachment 
+		values(seq_attachment.nextval, #{savePath}, #{originalName}, #{renameName}, '모대', #{boardNo}, 0, null)	
+	</insert>
+	
+	<update id="updateGroupInfo">
+		update membership 
+		set MEMBERSHIP_content = #{membershipContent},
+		host_phone = #{hostPhone}
+		where membership_no = #{membershipNo}
+	</update>
+	
+	<!-- 헌 그룹 사진 -->
+	<delete id="deleteGroupPic">
+		 DELETE FROM attachment
+  		 WHERE renamename = #{deletePic}
+	</delete>
+	
+	<!--  인원 증가 -->
+	<update id="updateCapacity">
+		UPDATE membership
+		SET capacity = capacity + 1
+		WHERE membership_no = #{membershipNo}
+	</update>
+	<update id="downCapacity">
+		UPDATE membership
+		SET capacity = capacity - 1
+		WHERE membership_no = #{membershipNo}
+	</update>
+	
+	
+	
+   <!-- 게시글 중 첨부파일 조회 -->
+   <select id="selectAttm" resultMap="attmResultSet">
+      SELECT *
+      FROM (
+        SELECT *
+        FROM attachment
+        WHERE board_no = #{boardNo} and board_type='모임'
+        ORDER BY ATTMID desc
+      )
+      WHERE ROWNUM = 1
+   </select>
+   
+   
+   <!--  0517 17:00분 댓 글 등 록    여 기 서 부 터 또 합 쳐 야 함  ㅁ ㅁ ㅁ ㅁ ㅁ ㅁ ㅁ ㅁ  -->
+   <insert id="insertReply">
+      insert into membership_board_reply values (
+       seq_membership_board_reply.nextval
+       ,#{replyContent}
+       ,#{replyWriter}
+       ,sysdate
+       ,sysdate
+       ,#{boardNo}
+   )
+   </insert>
+   
+   <!-- 글번호에 일치하는 댓글 전체 조회 -->
+   <select id="selectReply" resultMap="groupBoardReply">
+      select *
+      from membership_board_reply
+      where board_no = #{boardNo}
+      order by reply_no desc
+   </select>
+   
+   <resultMap type="com.kh.gorri.group.model.vo.GroupBoardReply" id="groupBoardReply">
+      <result property="replyNo" column="REPLY_NO" />
+      <result property="replyContent" column="REPLY_CONTENT" />
+      <result property="replyWriter" column="REPLY_WRITER" />
+      <result property="replyCreateDate" column="REPLY_CREATE_DATE" />
+      <result property="replyModifyDate" column="REPLY_MODIFY_DATE" />
+      <result property="boardNo" column="BOARD_NO"/>
+   </resultMap>
+   
+   <!-- 프로필 사진 조회 -->
+   <select id="selectProfileAttm" resultMap="attmResultSet">
+      select *
+      from attachment
+      where board_type = '프사' and users_id = #{id}
+      
+   </select>
+   
+   <!-- 일정 등록 -->
+   <insert id="insertSche">
+      insert into calendar values (
+       seq_schedule.nextval
+       ,#{schedule}
+       ,#{calContent}
+       ,#{groupNo}
+       ,#{schDate}
+       ,#{calWriter}
+   )
+   </insert>
+   
+   <!-- 일정 조회 -->
+   <select id="selectSche" resultMap="calResultSet">
+      select *
+      from calendar
+      where membership_no = #{groupNo} and schedule_date = #{schDate}
+   </select>
+   
+   <resultMap type="com.kh.gorri.group.model.vo.Calendar" id="calResultSet">
+      <id column="SCH_NO" property="schNo"/>      
+      <result column="SCHEDULE" property="schedule"/>
+      <result column="CALENDAR_CONTENT" property="calContent"/>
+      <result column="MEMBERSHIP_NO" property="groupNo"/>
+      <result column="SCHEDULE_DATE" property="schDate"/>
+      <result column="CAL_WRITER" property="calWriter"/>   
+   </resultMap>
+   
+   <!-- this로 클릭한 날짜에 일치하는 일정 조회  -->
+   <select id="selectClickSche" resultMap="calResultSet">
+      select *
+      from calendar
+      where membership_no =#{groupNo} and schedule_date = #{schDate}
+   </select>
+   
+   <!-- 일정 삭제  -->
+   <delete id="deleteSched">
+      DELETE FROM calendar
+      WHERE sch_no = #{schNo}
+   </delete>
+   
+   <!-- 게시글 수정 - 첨부파일 삭제  -->
+   <delete id="deleteAttm">
+      delete from attachment
+      where BOARD_NO = #{boardNo}
+   </delete>
+   
+   <!-- 게시글 내용 수정 -->
+   <update id="updateGroupBoard">
+      UPDATE membership_board
+      SET title = #{title}, content = #{content}, modifydate = sysdate 
+      where board_no = #{boardNo}
+   </update>
+   
+   <!-- 게시글 삭제 -->
+   <delete id="deleteBoard">
+      delete from membership_board
+      where board_no = #{boardNo}
+   </delete>
+   
+   <!-- 게시글에 해당 되는 댓글 삭제 -->
+   <delete id="deleteReply">
+      delete from membership_board_reply
+      where board_no = #{boardNo}
+   </delete>
+   
+   <!-- 댓글 수정 -->
+   <update id="updateReply">
+      update membership_board_reply
+      set reply_content = #{replyContent}, reply_modify_date = sysdate
+      where reply_no = #{replyNo}
+   </update>
+   
+   <!-- 댓글 개수 조회 -->
+   <select id="selectReplyCount" resultType="_int">
+      select count(*)
+      from membership_board_reply 
+      where board_no = #{boardNo}
+   </select>
+   
+   <!-- 모임 게시글 수 -->
+   <select id="getListGroupCount" resultType="_int">
+      select count(*)
+      from membership_board
+        where membership_no  = #{membershipNo}
+   </select>
+   
+   <!-- 개별 댓글 삭제 -->
+   <delete id="deleteOneReply">
+      delete from membership_board_reply
+        where reply_no = #{replyNo}
+   </delete>
+   
+   <select id="selectWriterPic" resultMap="attmResultSet">
+   		select *
+   		from attachment
+   		where users_id = #{replyWriter}
+   </select>
+   
+   <select id="getHostId" resultMap="GroupMemberResultSet">
+   		select *
+		from member
+		where membership_no=#{membershipNo} and grade='모임장'
+   </select>
+</mapper>

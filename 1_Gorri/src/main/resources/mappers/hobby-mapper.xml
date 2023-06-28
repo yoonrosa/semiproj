@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="hobbyMapper">
+	
+	<select id="hobbyBoardList" resultMap="searchHobbyResultSet"> <!-- 전체 리스트 -->
+		select *
+		from board
+			 join attachment using(board_no)
+		where  board_type = '취미' and attmlevel=0 and is_public = 'Y' and status = 'Y'
+		order by board_no desc
+	</select>
+	
+	<select id="hobbyCate" resultMap="searchHobbyResultSet"> <!-- 해당 카테고리 리스트 -->
+		select *
+		from board
+			 join attachment using(board_no)
+		where board_type = '취미' and attmlevel=0 and category = #{category} and is_public = 'Y' and status = 'Y'
+	</select>
+	
+	<select id="searchHobby" resultMap="searchHobbyResultSet">
+		select *
+		from board
+			 join attachment on(board.board_no = attachment.board_no)
+		where board_type='취미' and attmlevel = '0' and is_public = 'Y' and board.status = 'Y'
+			 <if test="searchCate == '내용'">
+			 	and board_content like '%${searchWord}%'
+			 </if>
+			 <if test="searchCate == '제목'">
+			 	and board_title like '%${searchWord}%'
+			 </if>
+			 <if test="searchCate != '내용' and searchCate != '제목'">
+			 	and (board_title like '%${searchWord}%' or board_content like '%${searchWord}%')
+			 </if>
+		order by board.board_no desc
+	</select>
+	
+	
+	<resultMap type="com.kh.gorri.board.model.vo.Board" id="searchHobbyResultSet">
+		<id column="BOARD_NO" property="boardNo"/>
+		<result column="BOARD_TITLE" property="boardTitle"/>
+		<result column="BOARD_CONTENT" property="boardContent"/>
+		<result column="IS_PUBLIC" property="isPublic"/>
+		<result column="STATUS" property="status"/>
+		<result column="POSTDATE" property="postdate"/>
+		<result column="MODIFYDATE" property="modifydate"/>
+		<result column="USERS_ID" property="usersId"/>
+		<result column="CATEGORY" property="category"/>
+		<result column="SAVE_PATH" property="savePath"/>
+		<result column="ORIGINALNAME" property="originalName"/>
+		<result column="RENAMENAME" property="renameName"/>
+		<result column="BOARD_TYPE" property="boardType"/>
+		<result column="ATTMLEVEL" property="attmLevel"/>
+	</resultMap>
+	
+	<select id="selectHobbyAttm" resultMap="attmResultSet">
+		select *
+		from attachment
+		where board_type = '취미' and attmlevel = '0'
+		order by attmid desc
+	</select>
+	
+	<resultMap type="com.kh.gorri.board.model.vo.Attachment" id="attmResultSet">
+		<id column="ATTMID" property="attmId"/>		
+		<result column="SAVE_PATH" property="savePath"/>
+		<result column="ORIGINALNAME" property="originalName"/>
+		<result column="RENAMENAME" property="renameName"/>
+		<result column="BOARD_TYPE" property="boardType"/>
+		<result column="BOARD_NO" property="boardNo"/>
+		<result column="ATTMLEVEL" property="attmLevel"/>
+		<result column="USERS_ID" property="usersId"/>		
+	</resultMap>
+	
+</mapper>
